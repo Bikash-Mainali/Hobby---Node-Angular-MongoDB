@@ -4,3 +4,7 @@ nav{
     padding:10px;
     background-color: white;
 }
+button{
+    padding:8px 25px 8px 25px;
+    border-radius:5px;
+}

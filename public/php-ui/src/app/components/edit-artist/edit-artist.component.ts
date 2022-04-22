@@ -3,6 +3,7 @@ import { FormGroup } from '@angular/forms';
 import { FormControl } from '@angular/forms';
 import { NgForm } from '@angular/forms';
 import { ActivatedRoute, Router } from '@angular/router';
+import { ToastrService } from 'ngx-toastr';
 import { Artists } from 'src/app/models/artists';
 import { ArtistsService } from 'src/app/services/artists.service';
 
@@ -14,14 +15,18 @@ import { ArtistsService } from 'src/app/services/artists.service';
 export class EditArtistComponent implements OnInit {
 
   role!: {}[]
-  editFormData!: FormGroup
+  editFormData!: NgForm
   showHideNotification: boolean = true;
+  possibleOptions!: []
+  selectedRole!: {}[]
+  name!: string
 
   artistId = this.route.snapshot.params["artistId"];
   songId = this.route.snapshot.params["songId"];
   constructor(private route: ActivatedRoute,
     private artistService: ArtistsService,
-    private _router: Router) {
+    private _router: Router,
+    private _toastr: ToastrService) {
   }
 
   ngOnInit(): void {
@@ -31,40 +36,47 @@ export class EditArtistComponent implements OnInit {
       { name: "Composer" }
     ];
     this.artistService.getOne(this.songId, this.artistId).subscribe({
-      next: response => {
-        console.log(response)
-        this.editFormData = new FormGroup({
-          name: new FormControl(response.name),
-          role: new FormControl(response.role),
-        })
+      next: artistResponse => {
+        debugger
+        this._toastr.success("Artist fetched succesfully")
+        this.name = artistResponse.name
+        let roleArray = [];
+        for (let role of artistResponse.role) {
+          roleArray.push({ name: role })
+        }
+        this.selectedRole = roleArray
+        console.log(artistResponse)
+        this.possibleOptions = artistResponse.role
+
       },
       error: err => {
-        //this.toastrService.error("Failed")
+        this._toastr.error("Failed")
         this._router.navigate(["error"]);
       },
       complete: () => {
-        //this.toastrService.success("Success")
       }
     })
 
   }
 
-
-  onUpdate() {
+  onUpdate(editFormData: NgForm) {
     let roleNames = [];
     console.log("...")
-    console.log(this.editFormData.value)
-    for (let r of this.editFormData.value.role) {
+    debugger
+    console.log(editFormData.value)
+    for (let r of editFormData.value.role) {
       roleNames.push(r.name);
     }
     console.log(roleNames)
-    let postData = new Artists(this.editFormData.value.name, roleNames)
+    let postData = new Artists(editFormData.value.name, roleNames)
     this.artistService.updateOne(postData, this.songId, this.artistId)
       .subscribe({
-        next: response => {
+        next: artistResponse => {
+          this._toastr.success("Artist updated succesfully")
         },
         error: err => {
           this._router.navigate(["error"])
+          this._toastr.error("Failed")
         },
         complete: () => {
           this.showHideNotification = false;
@@ -76,15 +88,14 @@ export class EditArtistComponent implements OnInit {
 
   onDelete(songId: string, artistId: string): void {
     this.artistService.deleteOne(songId, artistId).subscribe({
-      next: response => {
-        console.log(response);
+      next: artistResponse => {
+        this._toastr.success("Artist Deleted Successfully")
       },
       error: err => {
-        //this.toastrService.error("Failed")
+        this._toastr.error("Failed")
         this._router.navigate(["error"]);
       },
       complete: () => {
-        //this.toastrService.success("Success")
         // this._router.navigate(["artist"]);
         this.editFormData.reset();
 

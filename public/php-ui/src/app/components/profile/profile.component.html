@@ -1,0 +1,9 @@
+
+<div class="container text-center mt-5" *ngIf="isLoggedIn">
+    <div><img src="../../../assets//images/profile.png" height="230" width="230" ></div>
+<p class="mt-5">NAME: {{name}}</p>
+<p>Password: ****</p>
+<button class="btn btn-primary mt-5" (click)="onUpdatePassword()">Update Password</button>
+</div>
+
+

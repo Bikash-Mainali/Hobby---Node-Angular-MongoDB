@@ -1,20 +1,26 @@
+
 /**
  * song-controller.js
  */
 
 "use strict"
 
-const responseData = require("../dtos/response")
+require("dotenv").config();
 const Song = require("../models/song-model")
 const mongoose = require("mongoose");
+const res = require("express/lib/response");
 const ObjectId = require("mongodb").ObjectId;
 
+/**
+ * GET ALL
+ */
 const getAll = function (req, res) {
     console.log(`Get all, song controller`);
-    let count = 5;
-    let offset = 0;
-    const maxCount = 10;
-    const responseData = { status: 200, message: null };
+    let count = parseInt(process.env.DEFAULT_COUNT_LIMIT, 10)
+    let offset = parseInt(process.env.DEFAULT_OFFSET, 10)
+    const maxCount = parseInt(process.env.DEFAULT_MAXIMUM_COUNT, 10)
+
+    const response = { status: 200, message: {} };
 
     if (req.query && req.query.count) {
         count = parseInt(req.query.count, 10);
@@ -53,116 +59,161 @@ const getAll = function (req, res) {
     }
 
     if (count > maxCount) {
-        responseData.status = 400;
-        responseData.message = `count must be less than ${maxCount}`
-        res.status(responseData.status).json(responseData.message);
+        response.status = 400;
+        response.message = `count must be less than ${maxCount}`
+        res.status(response.status).json(response.message);
         return;
 
     }
     if (isNaN(count) || isNaN(offset)) {
-        responseData.status = 400;
-        responseData.message = `offset and count must be digit`;
-        res.status(responseData.status).json(responseData.message);
+        response.status = 400;
+        response.message = `offset and count must be digit`;
+        res.status(response.status).json(response.message);
         return;
 
     }
 
     console.log(searchQuery.releasedDate)
-    Song.find(searchQuery).sort({_id:-1}).skip(offset).limit(count).exec(function (err, song) {
-        if (err) {
-            responseData.status = 500;
-            responseData.message = err;
-        } else {
-            responseData.status = 200;
-            responseData.message = song;
-        }
-        res.status(responseData.status).json(responseData.message);
-    })
+    Song.find(searchQuery).sort({ _id: -1 }).skip(offset).limit(count)
+        .then((songs) => _onSuccessGetResponse(songs, res, response))
+        .catch((err) => _onFailureGetResponse(err, res, response))
 }
 
+const _onSuccessGetResponse = function (songs, res, response) {
+    response.status = 200;
+    response.message = songs;
+    res.status(response.status).json(response.message);
+}
+const _onFailureGetResponse = function (err, res, response, status) {
+    response.status = status || 500;
+    response.message = err;
+    res.status(response.status).json(response.message);
+}
+
+/**
+ * ADD ONE
+ */
 const addOne = function (req, res) {
     console.log(`Add one, song controller`);
+    const response = { status: 201, message: {} }
     const newSong = {
         title: req.body.title,
         genre: req.body.genre,
         releasedDate: req.body.releasedDate,
         artists: req.body.artists
     };
-    Song.create(newSong, function (err, song) {
-        const responseData = { status: 201, message: song }
-        if (err) {
-            responseData.status = 500;
-            responseData.message = err;
-        }
-        res.status(responseData.status).json(responseData.message);
-    })
-
+    Song.create(newSong)
+        .then((newCreatedSong) => {
+            _onSuccessPostResponse(newCreatedSong, response)
+        })
+        .catch((err) => {
+            _onFailurePostResponse(err, response);
+        })
+        .finally(() => {
+            _sendResponse(res, response);
+        })
 }
 
+const _onSuccessPostResponse = function (newCreatedSong, response) {
+    response.status = 201;
+    response.message = newCreatedSong;
+}
+const _onFailurePostResponse = function (err, response) {
+    response.status = 500;
+    response.message = err;
+}
+
+
+
+/**
+ * GET ONE
+ */
 const getOne = function (req, res) {
     console.log(`Get one, song controller`);
     const songId = req.params.songId;
+    const response = {
+        status: 200, message: {}
+    };
     if (mongoose.isValidObjectId(songId)) {
-        Song.findById(songId).exec(function (err, song) {
-            const responseData = { status: 200, message: song };
-            if (err) {
-                responseData.status = 500;
-                responseData.message = err;
-            }
-            else if (!song) {
-                responseData.status = 404;
-                responseData.message = { "message": `Song ID ${songId} not found` };
-            }
-            res.status(responseData.status).json(responseData.message);
-        })
+        Song.findById(songId)
+            .then((song) => _errorCheckOnGetOne(song, res, songId, response))
+            .catch((err) => _onFailureGetResponse(err, response))
     }
     else {
-        res.status(400).json({ "message": `Song ID is Invalid` });
+        response.status = 400;
+        response.message = `Song ID is Invalid`;
+        _onFailureGetResponse(response.message, res, response, response.status)
     }
 }
 
+const _errorCheckOnGetOne = function (song, res, songId, response) {
+    if (!song) {
+        response.status = 404;
+        response.message = `Song ID ${songId} is not found`;
+        _onFailureGetResponse(response.message, res, response, response.status)
+    } else {
+        _onSuccessGetResponse(song, res, response)
+    }
+}
+
+
+/**
+ * DELETE ONE
+ */
 const deleteOne = function (req, res) {
     console.log(`Delete one, song controller`);
     const songId = req.params.songId;
+    const response = { status: 204, message: {} };
     if (mongoose.isValidObjectId(songId)) {
-        Song.findByIdAndDelete(songId).exec(function (err, deletedSong) {
-            const responseData = { status: 204, message: deletedSong };
-            if (err) {
-                responseData.status = 500;
-                responseData.message = err
-            } else if (!deletedSong) {
-                responseData.status = 404;
-                responseData.message = `Song ID ${songId} not found`;
-            }
-            res.status(responseData.status).json(responseData.message);
+        Song.findById(songId).then((song) => {
+            Song.findByIdAndDelete(songId)
+                .then((deletedSong) => _onSuccessDeleteResponse(deletedSong, response))
+                .catch((err) => _onFailureDeleteResponse(err, response))
+                .finally(() => _sendResponse(res, response))
         })
+            .catch((err) => _onFailureGetResponse(res, response))
     }
     else {
-        res.status(400).json({ "message": `Song ID is Invalid` });
+        response.status = 400;
+        response.message = `Song ID ${songId} is invalid`;
+        _onFailureDeleteResponse(response.message, response, response.status)
     }
 }
 
+
+const _onSuccessDeleteResponse = function (deletedSong, response) {
+    response.status = 204;
+    response.message = deletedSong;
+
+}
+const _onFailureDeleteResponse = function (err, response, status) {
+    response.status = status || 500;
+    response.message = err;
+}
+
+
 const fullUpdateOne = function (req, res) {
     console.log(`Update one, song controller`);
-    const updateSong = function (req, res, song, responseData) {
+    const updateSong = function (req, res, song, response) {
         song.title = req.body.title;
         song.genre = req.body.genre;
         song.releasedDate = req.body.releasedDate;
         song.artists = req.body.artists;
-        song.save(function (err, updatedSong) {
-            if (err) {
-                responseData.status = 500;
-                responseData.message = err;
-            }
-            res.json(responseData)
-        });
+        song.save()
+            .then((updatedSong) => {
+                _onSuccessUpdateResponse(updatedSong, response);
+            })
+            .catch((err) => {
+                _onFailureUpdateResponse(err, res, response)
+            })
+            .finally(() => _sendResponse(res, response))
     }
     _updateOne(req, res, updateSong);
 }
 
 const partialUpdateOne = function (req, res) {
     console.log(`Patch Update one, song controller`);
-    const updateSong = function (req, res, song, responseData) {
+    const updateSong = function (req, res, song, response) {
         if (req.body.title) {
             song.title = req.body.title;
         }
@@ -175,13 +226,14 @@ const partialUpdateOne = function (req, res) {
         if (req.body.artists) {
             song.artists = req.body.artists;
         }
-        song.save(function (err, updatedSong) {
-            if (err) {
-                responseData.status = 500;
-                responseData.message = err;
-            }
-            res.json(responseData)
-        });
+        song.save()
+            .then((updatedSong) => {
+                _onSuccessUpdateResponse(updatedSong, response);
+            })
+            .catch((err) => {
+                _onFailureUpdateResponse(err, res, response)
+            })
+            .finally(() => _sendResponse(res, response))
     }
     _updateOne(req, res, updateSong);
 }
@@ -189,29 +241,48 @@ const partialUpdateOne = function (req, res) {
 const _updateOne = function (req, res, updateSongCallBack) {
     console.log(`Put Update one, song controller`);
     const songId = req.params.songId;
+    const response = { status: 204, message: {} };
     if (mongoose.isValidObjectId(songId)) {
-        Song.findById(songId).exec(function (err, song) {
-            const responseData = { status: 204, message: song };
-            if (err) {
-                responseData.status = 500;
-                responseData.message = err;
-            }
-            else if (!song) {
-                responseData.status = 404;
-                responseData.message = { "message": `Song ID ${songId} not found` };
-            }
-            if (responseData.status !== 204) {
-                res.status(responseData.status).json(responseData.message);
-            } else {
-                updateSongCallBack(req, res, song, responseData)
-            }
-        })
+        Song.findById(songId)
+            .then((song) => {
+                if (!song) {
+                    response.status = 404;
+                    response.message = `Song ID ${songId} not found`;
+                    _onFailureUpdateResponse(response.message, res, response, response.status)
+                }
+                else {
+                    updateSongCallBack(req, res, song, response)
+                }
+            })
+            .catch((err) => {
+                _onFailureUpdateResponse(err, res, response)
+            })
     }
     else {
-        res.status(400).json({ "message": `Song ID is Invalid` });
+        response.status = 400;
+        response.message = `Song ID ${songId} is invalid`;
+        _onFailureUpdateResponse(response.message, res, response, response.status)
     }
 }
 
+
+const _onSuccessUpdateResponse = function (updatedSong, response) {
+    response.status = 204;
+    response.message = updatedSong
+}
+
+const _onFailureUpdateResponse = function (err, res, response, status) {
+    response.status = status || 500;
+    response.message = err;
+    res.status(response.status).json(response.message);
+
+}
+
+
+const _sendResponse = function (res, response) {
+    res.status(response.status).json(response.message);
+
+}
 
 module.exports = {
     getAll,

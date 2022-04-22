@@ -1,0 +1,21 @@
+
+<!-- <nav>
+    <a class="navbar-brand" href="/login">Personal Hobby Project</a>s
+</nav> -->
+    <form #loginForm="ngForm" (ngSubmit)="onLogin(loginForm)" *ngIf="!isLoggedIn">
+        <label for="username">
+            User Name<span class="text-danger">*</span>
+        </label>
+        <input type="text" name="username" placeholder="username" required ngModel>
+        <label for="password">
+            Password<span class="text-danger">*</span>
+        </label>
+        <input type="password" name="password" placeholder="password" required ngModel>
+        <button class="btn btn-primary m-1" *ngIf="!isLoggedIn">Login</button>
+    </form>
+    <span  *ngIf="isLoggedIn">
+        <span>Welcome to {{name | uppercase}} &nbsp; &nbsp;</span><button class="btn btn-dark" (click)="onLogout()">Logout</button>
+    </span>
+
+
+

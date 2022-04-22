@@ -6,6 +6,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { IDropdownSettings } from 'ng-multiselect-dropdown';
 import { ArtistsService } from 'src/app/services/artists.service';
 import { Artists } from 'src/app/models/artists';
+import { ToastrService } from 'ngx-toastr';
 
 @Component({
   selector: 'app-artist',
@@ -26,7 +27,8 @@ export class ArtistComponent implements OnInit {
 
   constructor(private artistService: ArtistsService,
     private route: ActivatedRoute,
-    private _router: Router) { }
+    private _router: Router,
+    private _toastr: ToastrService) { }
 
   ngOnInit(): void {
     this.songId = this.route.snapshot.params["songId"]
@@ -39,6 +41,7 @@ export class ArtistComponent implements OnInit {
 
   addArtist(artistRegistration: NgForm) {
     let role = [];
+    debugger
     for(let artist of artistRegistration.value.role){
       role.push(artist.name)
     }
@@ -46,13 +49,13 @@ export class ArtistComponent implements OnInit {
     this.artistService.addOne(this.songId, this.artist).subscribe({
       next: response => {
         console.log(response);
+        this._toastr.success("Artist added successfully")
       },
       error: err => {
-        //this.toastrService.error("Failed")
+        this._toastr.error("Failed")
         this._router.navigate(["error"]);
       },
       complete: () => {
-        //this.toastrService.success("Success")
         this.showHideNotification= false;
         artistRegistration.reset();
       }

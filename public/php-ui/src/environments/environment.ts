@@ -4,7 +4,10 @@
 
 export const environment = {
   production: false,
-  REST_API_URL: 'The URL for REST API'
+  REST_API_URL: 'The URL for REST API',
+  REST_API_REGISTER_USER_PATH: 'The path for Register REST API',
+  REST_API_LOGIN_USER_PATH: 'The path for Login REST API',
+  TOKEN_KEY:"The name of the key used by the token in the browser"
 
 };
 

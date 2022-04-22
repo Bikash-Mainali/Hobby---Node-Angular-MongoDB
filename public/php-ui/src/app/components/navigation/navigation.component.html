@@ -1,6 +1,11 @@
-<nav>
-    <a class="navbar-brand" href="">Personal Hobby Project</a>
-    <button class="btn btn-primary me-2" (click)="onHome()">Home</button>
-    <button class="btn btn-primary me-2" (click)="onSongs()">Songs</button>
-    <button class="btn btn-success me-2" (click)="onAdd()">Add</button>
+<nav class="navbar navbar-light bg-light">
+    <div>
+        <a class="navbar-brand" routerLink="/home">Personal Hobby Project</a>
+        <button class="btn btn-primary me-2" (click)="onHome()">Home</button>
+        <button class="btn btn-primary me-2" (click)="onSongs()">Songs</button>
+        <button class="btn btn-success me-2" (click)="onAdd()" *ngIf="isLoggedIn">Add</button>
+        <button class="btn btn-secondary me-2" (click)="onRegister()" *ngIf="!isLoggedIn">Register</button>
+        <button class="btn btn-dark me-2"*ngIf="isLoggedIn" [routerLink]="['/profile']">Profile</button>
+    </div>
+        <app-login (onLoginUser) = "resetFlag($event)"></app-login>
 </nav>

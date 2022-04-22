@@ -5,17 +5,30 @@
     </span>
     <hr>
 
-    <form [formGroup] = "editFormData" (ngSubmit)="onUpdate()">
+    <form #editFormData = "ngForm" (ngSubmit)="onUpdate(editFormData)">
         <div class="form-group">
             <Label>Name</Label>
-            <input type="text" class="form-control"  formControlName="name" required>
+            <input type="text" 
+            class="form-control"  
+            name = "name"
+            [(ngModel)] = "name"
+            required
+            >
         </div>
         <div>
             <label>Role</label>
-            <ng-select [items]="role" bindLabel="name" placeholder="Select Category" formControlName="role" appendTo="body" [multiple]="true" required>
+            <ng-select [items]="role"
+             bindLabel="name" 
+             placeholder="Select Category" 
+             appendTo="body" 
+             [multiple]=true
+             name="role"
+             required
+             [(ngModel)]="selectedRole"
+             >
             </ng-select>
             <hr>
-            </div>
+        </div>
             <div>
                 <button type="submit" class="btn btn-primary me-3">Submit</button>
                 <button type="submit" class="btn btn-danger me-3" (click)="onDelete(songId, artistId)">Delete</button>

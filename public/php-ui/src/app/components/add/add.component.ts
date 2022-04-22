@@ -16,7 +16,8 @@ export class AddComponent implements OnInit {
 registrationForm!:FormGroup
 
   constructor(private songsService: SongsService,
-     private _router: Router) {
+     private _router: Router,
+     private _toastr: ToastrService) {
     this.registrationForm = new FormGroup({
       title: new FormControl(''),
       genre: new FormControl(''),
@@ -30,15 +31,15 @@ registrationForm!:FormGroup
 
   addForm(){
     this.songsService.addOne(this.registrationForm.value).subscribe({
-      next: response => {
+      next: songResponse => {
+        this._toastr.success("Song added successfully");
       },
       error: err =>{
-        //this.toastrService.error("Failed");
+        this._toastr.error("Failed");
         this._router.navigate(["error"])
 
       },
       complete: () =>{
-        //this.toastrService.success("Song added successfully");
         this._router.navigate(["songs"])
       }
     })

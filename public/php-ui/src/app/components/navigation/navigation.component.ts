@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { Router } from '@angular/router';
+import { AuthenticationService } from 'src/app/services/user/authentication.service';
 
 @Component({
   selector: 'app-navigation',
@@ -8,18 +9,42 @@ import { Router } from '@angular/router';
 })
 export class NavigationComponent implements OnInit {
 
-  constructor(private _router: Router) { }
+  name!: string
+  isLoggedIn: boolean = false;
+
+  // get isLoggedIn() {
+  //   return this._authService.isLoggedIn
+  // }
+
+  constructor(private _router: Router,
+    private _authService: AuthenticationService,
+  ) { }
 
   ngOnInit(): void {
+    this.name = this._authService.name;
+    this.isLoggedIn = this._authService.isLoggedIn;
   }
-  onAdd():void{
+  onAdd(): void {
     this._router.navigate(["songs/add"])
   }
-  
-  onHome():void{
-    this._router.navigate([""])
+
+  onHome(): void {
+    this._router.navigate(["home"])
   }
-  onSongs(): void{
+  onSongs(): void {
     this._router.navigate(["songs"])
+  }
+  onRegister(): void {
+    this._router.navigate(["register"])
+  }
+
+  onLogout() {
+    this._authService.deleteToken()
+    // this.isLoggedIn = false;
+    this._router.navigate(["register"])
+  }
+
+  resetFlag(isLoggedIn: boolean) {
+    this.isLoggedIn = isLoggedIn;
   }
 }

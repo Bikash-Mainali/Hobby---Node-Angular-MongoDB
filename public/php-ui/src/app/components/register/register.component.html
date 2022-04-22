@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Web Form 1</title>
+</head>
+<body class=" d-flex justify-content-center">
+    <form #registrationForm="ngForm" (ngSubmit)= "onRegister(registrationForm)" class="col-md-4 m-5">
+        <div *ngIf="hasSuccess" class="alert alert-success text-center fw-bold fs-3 mt-1">{{message}}</div>
+        <div *ngIf="hasError" class="alert alert-danger text-center fw-bold fs-3 mt-1">{{message}}</div>
+        <div class="form-group mb-4">
+            <label for="name">
+                Name<span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+            class="form-control mt-2" 
+            name="name" 
+            placeholder="name" 
+            required 
+            ngModel
+            #name = "ngModel"
+            >
+            <span class="text-danger" *ngIf="name.errors?.['required'] && name.touched">name is required</span>
+        </div>
+       
+        <div class="form-group mb-4">
+            <label for="username">
+                User Name<span class="text-danger">*</span>
+            </label>
+            <input type="text" 
+            class="form-control mt-2"  
+            name="username" 
+            placeholder="username" 
+            required 
+            ngModel
+            #username = "ngModel"
+            >
+            <span class="text-danger" *ngIf="username.errors?.['required'] && username.touched">username is required</span>
+
+        </div>
+        <div class="form-group mb-4">
+            <label for="password">
+                Password<span class="text-danger">*</span>
+            </label>
+            <input type="password" 
+            class="form-control mt-2" 
+            name="password" 
+            placeholder="password" 
+            required 
+            ngModel
+            #password = "ngModel"
+            >
+            <span class="text-danger" *ngIf="password.errors?.['required'] && password.touched">password is required</span>
+        </div>
+        <div class="form-group mb-4">
+            <label for="confirmPassword">
+                Confirm Password<span class="text-danger">*</span>
+            </label>
+            <input type="password" 
+            class="form-control mt-2" 
+            name="confirmPassword" 
+            placeholder="retype password" 
+            required 
+            ngModel
+            #confirmPassword = "ngModel">
+            <span class="text-danger" *ngIf="confirmPassword.errors?.['required'] && confirmPassword.touched">confirm password is required</span>
+            <span class="text-success" *ngIf="confirmPassword.value == password.value && confirmPassword.touched && password.value && confirmPassword.value">Password matched</span>
+            <span class="text-danger" *ngIf="confirmPassword.value !== password.value && confirmPassword.touched && !confirmPassword.errors?.['required']">Password not matched</span>
+        </div>
+
+        <button type="submit" class="btn btn-primary col-md-12 mt-3" [disabled]="!registrationForm.valid || password.value !== confirmPassword.value">Register</button>
+    </form>
+</body>
+
+</html>

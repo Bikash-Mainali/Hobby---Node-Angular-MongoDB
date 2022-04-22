@@ -23,4 +23,4 @@ const SongSchema = mongoose.Schema(
     }
 )
 
-module.exports = mongoose.model(process.env.DB_MODEL, SongSchema, process.env.DB_COLLECTION)
+module.exports = mongoose.model(process.env.DB_SONG_MODEL, SongSchema, process.env.DB_SONG_COLLECTION)

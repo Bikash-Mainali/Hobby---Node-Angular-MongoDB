@@ -3,6 +3,7 @@ import { ActivatedRoute, Router } from '@angular/router';
 import { ToastrService } from 'ngx-toastr';
 import { Songs } from 'src/app/models/songs';
 import { SongsService } from 'src/app/services/songs.service';
+import { AuthenticationService } from 'src/app/services/user/authentication.service';
 
 @Component({
   selector: 'app-song',
@@ -12,62 +13,65 @@ import { SongsService } from 'src/app/services/songs.service';
 export class SongComponent implements OnInit {
   song!: any;
   showAddArtistForm: boolean = true;
-  showHideEditForm:boolean= true;
-  showArtistList: boolean = true;
+  showEditSong: boolean = false;
+  showArtistList: boolean = false;
   isEditArtist: boolean = false;
+  isLoggedIn!: boolean
   constructor(private route: ActivatedRoute,
     private songService: SongsService,
     private _router: Router,
-   // private toastrService: ToastrService
+    private _toastr: ToastrService,
+    private _authService: AuthenticationService
   ) { }
 
   ngOnInit(): void {
+    this.isLoggedIn = this._authService.isLoggedIn
     const songId = this.route.snapshot.params["songId"];
     this.songService.getOne(songId).subscribe({
-      next: response => {
-        console.log(response)
-        this.song = response
+      next: songResponse => {
+        console.log(songResponse)
+        this.song = songResponse
+        this._toastr.success("Song fetched successfully")
       },
       error: err => {
-        //this.toastrService.error("Failed")
+        this._toastr.error("Failed")
         this._router.navigate(["error"]);
       },
       complete: () => {
-        //this.toastrService.success("Success")
       }
     })
   }
 
   onDelete(song: any): void {
     this.songService.deleteOne(song._id).subscribe({
-      next: response => {
-        console.log(response);
+      next: songResponse => {
+        this._toastr.success("Song deleted successfully")
       },
       error: err => {
-        //this.toastrService.error("Failed")
         this._router.navigate(["error"]);
+        this._toastr.error("Failed")
       },
       complete: () => {
-        //this.toastrService.success("Success")
         this._router.navigate(["songs"]);
       }
     })
   }
 
 
-  onAddArtist(song: Songs){
+  onAddArtist(song: Songs) {
     this._router.navigate(["artist"])
     this.showAddArtistForm = true;
   }
 
-  onEditSong(song: Songs){
-    this.showHideEditForm = false;
+  onEditSong(song: Songs) {
+    this.showEditSong = true;
+    this.showArtistList = false;
 
   }
-  onEditArtist(song: any){
+  onEditArtist(song: any) {
     console.log(song.artists)
     this.showAddArtistForm = true;
-    this.showArtistList = false;
+    this.showArtistList = true;
     this.isEditArtist = true;
   }
 }
